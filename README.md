@@ -1,2 +1,2 @@
-# Utilities
+# cyberware-server
 *hodne hustacky*
