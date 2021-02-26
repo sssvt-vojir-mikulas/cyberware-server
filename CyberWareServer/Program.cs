@@ -40,6 +40,11 @@ namespace CyberWareServer
                     GameLogic.Update();
 
                     _nextLoop = _nextLoop.AddMilliseconds(Constants.MS_PER_TICK);
+
+                    if(_nextLoop > DateTime.Now)
+                    {
+                        Thread.Sleep(_nextLoop - DateTime.Now);
+                    }
                 }
             }
         }

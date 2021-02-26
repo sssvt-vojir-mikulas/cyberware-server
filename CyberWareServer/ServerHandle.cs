@@ -18,7 +18,14 @@ namespace CyberWareServer
                 Debug.ErrorLog($"Player \"{_username}\" [ID: { _fromClient} ] has assumed the wrong client ID ({_clientIdCheck})");
             }
 
+
             //napojit hráče DO EPICKÉ hry(ale kam? co je to hra? PANIKAA aaÁáÁA)
+        }
+
+        public static void UDPTestReceived(int _fromClient, Packet _packet)
+        {
+            string _msg = _packet.ReadString();
+            Debug.AlertLog($"[UDP]Player{_fromClient} : {_msg}");
         }
     }
 }
