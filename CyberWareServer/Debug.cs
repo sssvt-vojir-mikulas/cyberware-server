@@ -28,6 +28,7 @@ namespace CyberWareServer
             ResetColor();
         }
 
+         
         public static void Heading(string _message)
         {
             WriteLine(_message);

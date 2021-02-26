@@ -26,7 +26,8 @@ namespace CyberWareServer
 
             private readonly int id;
             private NetworkStream stream;
-            private byte[] receiveBuffer; 
+            private byte[] receiveBuffer;
+            private Packet receivedData;
 
             public TCP(int _id)
             {
@@ -41,6 +42,7 @@ namespace CyberWareServer
 
                 stream = socket.GetStream();
                 receiveBuffer = new byte[dataBufferSize];
+                receivedData = new Packet();
 
                 stream.BeginRead(receiveBuffer,0,dataBufferSize, ReceiveCallback, null);
 
@@ -76,6 +78,7 @@ namespace CyberWareServer
                     byte[] _data = new byte[_byteLength];
                     Array.Copy(receiveBuffer, _data, _byteLength);
 
+                    receivedData.Reset(HandleData(_data));
                     stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
                 }
                 catch(Exception _exception)
@@ -84,6 +87,52 @@ namespace CyberWareServer
 
                     // tady taky ten jeden negr.. teda disconnect
                 }
+            }
+
+            private bool HandleData(byte[] _data)
+            {
+                int _packetLenght = 0;
+
+                receivedData.SetBytes(_data);
+
+                if (receivedData.UnreadLength() >= 4)
+                {
+                    _packetLenght = receivedData.ReadInt();
+                    if (_packetLenght <= 0)
+                    {
+                        return true;
+                    }
+                }
+
+                while (_packetLenght > 0 && _packetLenght <= receivedData.UnreadLength())
+                {
+                    byte[] _packetBytes = receivedData.ReadBytes(_packetLenght);
+                    ThreadManager.ExecuteOnMainThread(() =>
+                    {
+                        using (Packet _packet = new Packet(_packetBytes))
+                        {
+                            int _packetId = _packet.ReadInt();
+                            Server.packetHandlers[_packetId](id,_packet);
+                        }
+                    });
+
+                    _packetLenght = 0;
+                    if (receivedData.UnreadLength() >= 4)
+                    {
+                        _packetLenght = receivedData.ReadInt();
+                        if (_packetLenght <= 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                if (_packetLenght <= 1)
+                {
+                    return true;
+                }
+
+                return false;
             }
         }
     }
